@@ -1,9 +1,10 @@
 use std::io;
 use std::io::prelude::*;
-use std::io::{BufReader, BufRead};
+use std::io::{BufReader};
 use std::fs::File;
-use std::convert::TryInto;
-use std::io::SeekFrom;
+// use std::convert::TryInto;
+// use std::io::SeekFrom;
+// use std::ops::Range;
 
 //https://www.nws.noaa.gov/oh/hrl/dmip/2/xmrgformat.html
 // https://www.nws.noaa.gov/oh/hrl/misc/xmrg.pdf
@@ -18,24 +19,35 @@ pub fn need_byte_reversal(num_bytes: u32) -> bool {
 //     arr.iter()
 //         .
 // }
-// fn header_contents(reader: &mut BufReader<u8>) -> io::Result<[u8; 4]> {
+// pub fn header_contents(reader: &mut BufReader<File>) -> io::Result<[u32; 4]> {
 //     reader.seek(SeekFrom::Start(4))?;
 //     let mut handle = reader.take(4);
+
+//     // header size 4
+//     let header = (0..4).fold([0; 4], |arr, i| {
+//         arr[i] = read_int32(reader).unwrap();
+//         arr
+//     }).collect();
     
-//     let mut buffer = [0; 4];
-//     handle.read(&mut buffer)?;
-    
-//     Ok(buffer)
+//     Ok(header)
 // }
 
-pub fn read_int32(reader: &mut BufReader<File>) -> io::Result<(u32, &mut BufReader<File>)> {
+// pub fn read_int32(reader: &mut BufReader<File>) -> io::Result<(i32, BufReader<File>)> {
+pub fn read_int32<'a, R: Read + 'a>(reader: R) -> io::Result<(i32, Box<dyn Read + 'a>)> {
+
     let mut handle = reader.take(4);
 
     let mut buffer = [0; 4];
     handle.read(&mut buffer)?;
 
     // Intel uses little endian
-    Ok((u32::from_le_bytes(buffer), reader))
+    Ok((i32::from_le_bytes(buffer), Box::new(handle)))
+}
+
+pub fn get_reader(path: &str) -> io::Result<BufReader<File>> {
+    let file = File::open(path)?;
+
+    Ok(BufReader::new(file))
 }
 
 // pub fn read_xmrg(file_path: &str) -> io::Result<()> {
