@@ -1,27 +1,35 @@
-use rexmrg::{read_int32, get_reader};
-
-
+use rexmrg::{read_header, get_reader};
 
 fn main() {
     println!("Hello, world!");
-    let arr = [0b1, 0b1, 0b1, 0b1];
-    // 1 1
-    let value = u32::from_be_bytes(arr);
 
-    println!("val {}", value);
+    // let rez2 = rez1.map(|(i, handle)| {
+    //     println!("i is {}", i);
+    //     handle
+    // })
+    // .and_then(read_int32)
+    // .map(|(i, handle)| {
+    //     println!("i 2 in is {}", i);
+    //     handle
+    // })
+    // .and_then(read_int32)
+    // .map(|(i, handle)| {
+    //     println!("i 3 in is {}", i);
+    //     handle
+    // })
+    // .and_then(read_int32)
+    // .map(|(i, _)| {
+    //     println!("i 3 in is {}", i);
+    //     i
+    // });
 
-    let reader = get_reader("xmrg0506199516z.gz");
+    // println!("i 3 is {}", rez2.unwrap());
+    let header = read_header(&mut get_reader("xmrg0506199516z.gz").unwrap()).unwrap();
+    println!("the header is {:?}", header);
+    
+    println!("now for the tester");
 
-    let rez1 = reader.and_then(read_int32);
-    let rez2 = rez1.map(|(i, handle)| {
-        println!("i is {}", i);
-        handle
-    })
-    .and_then(read_int32)
-    .map(|(i, _)| {
-        println!("i 2 in is {}", i);
-        i
-    });
+    // tester("xmrg0506199516z.gz", 20).unwrap();
 
-    println!("i 2 is {}", rez2.unwrap());
+    println!("Fin ...");
 }
