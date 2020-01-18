@@ -45,6 +45,16 @@ impl Endian {
         }
     }
 
+    pub fn read_int16<R: Read>(&self, reader: &mut R) -> io::Result<i16> {
+        let mut buffer = [0; 2];
+        reader.read_exact(&mut buffer)?; // need error handling in case not 4 bytes?
+
+        match self {
+            Endian::Big => Ok(i16::from_be_bytes(buffer)),
+            Endian::Little => Ok(i16::from_le_bytes(buffer))
+        }
+    }
+
     pub fn read_u8<R: Read>(&self, reader: &mut R) -> io::Result<u8> {
         let mut buffer = [0; 1];
         reader.read_exact(&mut buffer)?; // need error handling in case not 4 bytes?
@@ -84,6 +94,13 @@ impl ReadBytes {
     pub fn read_int32s<R: Read>(&self, reader: &mut R) -> io::Result<Vec<i32>> {
         (0..self.count).map(|_| {
             self.endian.read_int32(reader)
+        })
+        .collect()
+    }
+
+    pub fn read_int16s<R: Read>(&self, reader: &mut R) -> io::Result<Vec<i16>> {
+        (0..self.count).map(|_| {
+            self.endian.read_int16(reader)
         })
         .collect()
     }
