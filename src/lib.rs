@@ -4,66 +4,78 @@ use std::io::{BufReader};
 use std::fs::File;
 // use std::fs;
 // use std::convert::TryInto;
-use std::io::SeekFrom;
+// use std::io::SeekFrom;
 // use std::ops::Range;
 
 //https://www.nws.noaa.gov/oh/hrl/dmip/2/xmrgformat.html
 // https://www.nws.noaa.gov/oh/hrl/misc/xmrg.pdf
 // https://www.nws.noaa.gov/oh/hrl/dmip/2/src/read_xmrg2.c
 
-
-pub fn need_byte_reversal(num_bytes: u32) -> bool {
-    if num_bytes != 16 { true } else { false }
+pub enum Endian {
+    Little,
+    Big
 }
 
-// fn reverse_byte_order(arr: Vec<i32>) -> Vec<i32> {
-//     arr.iter()
-//         .
-// }
-// pub fn header_contents(reader: &mut BufReader<File>) -> io::Result<[u32; 4]> {
-//     reader.seek(SeekFrom::Start(4))?;
-//     let mut handle = reader.take(4);
+impl Endian {
+    pub fn read_int32<R: Read>(&self, reader: &mut R) -> io::Result<i32> {
+        let mut buffer = [0; 4];
+        reader.read_exact(&mut buffer)?; // need error handling in case not 4 bytes?
 
-//     // header size 4
-//     let header = (0..4).fold([0; 4], |arr, i| {
-//         arr[i] = read_int32(reader).unwrap();
-//         arr
-//     }).collect();
-    
-//     Ok(header)
-// }
-pub fn tester(path: &str, stop: usize) -> io::Result<()> {
-    let file = File::open(path)?;
-
-    for (i, b) in file.bytes().enumerate() {
-        println!("byte {} is: {:b}", i, b.unwrap());
-        if i == stop { break; }
+        match self {
+            Endian::Big => Ok(i32::from_be_bytes(buffer)),
+            Endian::Little => Ok(i32::from_le_bytes(buffer))
+        }
     }
-
-    Ok(())
 }
 
-
-// pub fn read_int32(reader: &mut BufReader<File>) -> io::Result<(i32, BufReader<File>)> {
-// pub fn read_int32<'a, R: Read + 'a>(reader: R) -> io::Result<(i32, Box<dyn Read + 'a>)> {
-pub fn read_int32<R: Read>(reader: &mut R) -> io::Result<i32> {
+pub fn read_b_int32<R: Read>(reader: &mut R) -> io::Result<i32> {
 
     let mut buffer = [0; 4];
-    reader.read(&mut buffer)?; // need error handling in case not 4 bytes?
+    reader.read_exact(&mut buffer)?; // need error handling in case not 4 bytes?
 
-    // Intel uses little endian
-    Ok(i32::from_le_bytes(buffer))
+    Ok(i32::from_be_bytes(buffer))
 }
 
-pub fn read_header(reader: &mut BufReader<File>) -> io::Result<Vec<i32>> {
-    let position = reader.seek(SeekFrom::Start(4))?;
+pub fn get_endian<R: Read>(reader: &mut R) -> io::Result<Endian> {
+    let word = read_b_int32(reader);
 
-    (0..4).map(|i| {
-        reader.seek(SeekFrom::Start(position + (i * 4)))?;
-        read_int32(reader)
+    word.and_then(|int| {
+        match int {
+            16 => Ok(Endian::Big),
+            _ => Ok(Endian::Little)
+        }
     })
-    .collect()
 }
+
+pub struct ReadBytes {
+    count: u64,
+    endian: Endian
+}
+
+impl ReadBytes {
+
+    pub fn new(count: u64, endian: Endian) -> Self {
+        Self { count, endian }
+    }
+
+    pub fn read_int32s<R: Read>(&self, reader: &mut R) -> io::Result<Vec<i32>> {
+        (0..self.count).map(|_| {
+            // reader.seek(SeekFrom::Current(i))?;
+            self.endian.read_int32(reader)
+        })
+        .collect()
+    }
+}
+
+// pub fn read_int32s(reader: &mut BufReader<File>) -> io::Result<Vec<i32>> {
+//     // let _ = reader.seek(SeekFrom::Start(4))?;
+
+//     (0..4).map(|_| {
+//         // reader.seek(SeekFrom::Current(i))?;
+//         read_int32(reader)
+//     })
+//     .collect()
+// }
 
 pub fn get_reader(path: &str) -> io::Result<BufReader<File>> {
     let file = File::open(path)?;
