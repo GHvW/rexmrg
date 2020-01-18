@@ -1,4 +1,4 @@
-use rexmrg::{ReadBytes, get_endian, get_reader, read_b_int32};
+use rexmrg::{ReadBytes, get_endian, get_reader, read_b_int32, get_xmrg_version};
 use std::fs::File;
 use std::io::{Read};
 use std::io;
@@ -13,17 +13,20 @@ fn main() {
     let endian = get_endian(&mut reader).unwrap();
     let header_bytes = ReadBytes::new(4, endian);
 
-    println!("the header is {:?}", header_bytes.read_int32s(&mut reader).unwrap());
+    let header = header_bytes.read_int32s(&mut reader).unwrap();
+    println!("the header is {:?}", &header);
 
-    // reader.seek(SeekFrom::Current(4)).unwrap();
+    reader.seek(SeekFrom::Current(4)).unwrap();
 
-    let num_header2_bytes = endian.read_int32(&mut reader).unwrap();
+    let num_row2_bytes = endian.read_int32(&mut reader).unwrap();
     // let num_header2_bytes = read_b_int32(&mut reader).unwrap();
-    let header2_bytes = ReadBytes::new(num_header2_bytes as u64, endian);
+    // let header2_bytes = ReadBytes::new(num_row2_bytes as u64, endian);
+    let xmrg_version = get_xmrg_version(num_row2_bytes, header[2]);
+    println!("xmrg version: {:?}", xmrg_version.unwrap());
 
-    println!("num header2 bytes {}", num_header2_bytes);
+    // println!("num row2 bytes {}", num_row2_bytes);
 
-    println!("the header 2 is {:?}", header2_bytes.read_u8s(&mut reader).unwrap());
+    // println!("the row 2 is {:?}", header2_bytes.read_u8s(&mut reader).unwrap());
     
     println!("now for the tester");
 

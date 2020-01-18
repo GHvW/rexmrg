@@ -11,6 +11,22 @@ use std::fs::File;
 // https://www.nws.noaa.gov/oh/hrl/misc/xmrg.pdf
 // https://www.nws.noaa.gov/oh/hrl/dmip/2/src/read_xmrg2.c
 
+
+pub fn get_reader(path: &str) -> io::Result<BufReader<File>> {
+    let file = File::open(path)?;
+    Ok(BufReader::new(file))
+}
+
+
+pub fn read_b_int32<R: Read>(reader: &mut R) -> io::Result<i32> {
+
+    let mut buffer = [0; 4];
+    reader.read_exact(&mut buffer)?; // need error handling in case not 4 bytes?
+
+    Ok(i32::from_be_bytes(buffer))
+}
+
+
 #[derive(Debug, Copy, Clone)]
 pub enum Endian {
     Little,
@@ -38,15 +54,6 @@ impl Endian {
             Endian::Little => Ok(u8::from_le_bytes(buffer))
         }
     }
-}
-
-
-pub fn read_b_int32<R: Read>(reader: &mut R) -> io::Result<i32> {
-
-    let mut buffer = [0; 4];
-    reader.read_exact(&mut buffer)?; // need error handling in case not 4 bytes?
-
-    Ok(i32::from_be_bytes(buffer))
 }
 
 
@@ -90,11 +97,22 @@ impl ReadBytes {
 }
 
 
-pub fn get_reader(path: &str) -> io::Result<BufReader<File>> {
-    let file = File::open(path)?;
-    Ok(BufReader::new(file))
+#[derive(Debug)]
+pub enum XmrgVersion {
+    Pre1997,
+    Build4_2,
+    Build5_2_2,
 }
 
+
+pub fn get_xmrg_version(byte_count: i32, max_x: i32) -> Option<XmrgVersion> {
+    match byte_count {
+        66 => Some(XmrgVersion::Build5_2_2),
+        38 => Some(XmrgVersion::Build4_2), // a 37 byte version may be valid. Consider adding
+        n if n == max_x * 2 => Some(XmrgVersion::Pre1997),
+        _ => None
+    }
+}
 
 #[cfg(test)]
 mod tests {
