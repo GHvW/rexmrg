@@ -4,8 +4,9 @@ use std::io::{Read};
 use std::io;
 use std::io::SeekFrom;
 use std::io::prelude::*;
+use std::io::{self, Write};
 
-fn main() {
+fn main() -> io::Result<()> {
     println!("Hello, world!");
 
 
@@ -59,7 +60,7 @@ fn main() {
         .unwrap();
 
     println!("row count is {}", row1_in_mm.len());
-    println!("first row in mm?: {:?}", row1_in_mm);
+    // println!("first row in mm?: {:?}", row1_in_mm);
     // ********************* end v2 ********************************
 
     
@@ -68,6 +69,10 @@ fn main() {
     // tester("xmrg0506199516z.gz", 400).unwrap();
 
     println!("Fin ...");
+
+    // io::stdout().write_all(&row1_in_mm)?;
+
+    Ok(())
 }
 
 pub fn tester(path: &str, stop: usize) -> io::Result<()> {
@@ -82,3 +87,10 @@ pub fn tester(path: &str, stop: usize) -> io::Result<()> {
     Ok(())
 }
 
+pub fn average(data: Vec<Vec<f64>>) -> f64 {
+    let count = data.len() * data[0].len();
+
+    data.iter()
+        .flatten()
+        .sum() / count
+}

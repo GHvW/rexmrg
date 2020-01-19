@@ -4,12 +4,15 @@ use std::io::{BufReader};
 use std::fs::File;
 // use std::fs;
 // use std::convert::TryInto;
-// use std::io::SeekFrom;
+use std::io::SeekFrom;
 // use std::ops::Range;
 
 //https://www.nws.noaa.gov/oh/hrl/dmip/2/xmrgformat.html
 // https://www.nws.noaa.gov/oh/hrl/misc/xmrg.pdf
 // https://www.nws.noaa.gov/oh/hrl/dmip/2/src/read_xmrg2.c
+// https://www.nws.noaa.gov/oh/hrl/distmodel/hrap.htm
+// https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtolist.c
+// https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtoasc.c
 
 
 pub fn get_reader(path: &str) -> io::Result<BufReader<File>> {
@@ -79,6 +82,8 @@ pub fn get_endian<R: Read>(reader: &mut R) -> io::Result<Endian> {
 }
 
 
+
+#[derive(Debug, Copy, Clone)]
 pub struct ReadBytes {
     count: u64,
     endian: Endian
@@ -142,6 +147,38 @@ pub fn get_xmrg_version(byte_count: i32, max_x: i32) -> Option<XmrgVersion> {
         _ => None
     }
 }
+
+
+// if a data point is negative, represent as -999 (no data), if positive, divide by 100 to represent in millimeters
+// data points are represented as a 100th of a milimeter. .001mm is represented as 1 in a xmrg data point, dividing by 100 gets us to .001
+pub fn to_mm(data_point: i16) -> f64 {
+    if data_point < 0 {
+        -999.0
+    } else {
+        data_point as f64 / 100.0
+    }
+}
+
+pub fn process_row<R: Read + Seek>(read_bytes: ReadBytes, reader: &mut R) -> io::Result<Vec<f64>> {
+    reader.seek(SeekFrom::Current(4))?;
+
+    let result = 
+        read_bytes
+            .iter_int16s(reader)
+            .map(|res| res.map(to_mm))
+            .collect();
+
+    reader.seek(SeekFrom::Current(4))?;
+
+    result
+}
+
+pub fn process_data_set(max_y: i32, read_bytes: ReadBytes, reader: &mut R) -> io::Result<Vec<Vec<f64>>> {
+    (0..max_y).map(|_| {
+        
+    })
+}
+
 
 #[cfg(test)]
 mod tests {
