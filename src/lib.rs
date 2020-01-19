@@ -85,35 +85,47 @@ pub struct ReadBytes {
 }
 
 // figure out if there is a way to consolidate some of these into one using generics
+// does self need to be a reference or can we consume it?
 impl ReadBytes {
 
     pub fn new(count: u64, endian: Endian) -> Self {
         Self { count, endian }
     }
 
-    pub fn read_int32s<R: Read>(&self, reader: &mut R) -> io::Result<Vec<i32>> {
-        (0..self.count).map(|_| {
+    pub fn iter_int32s<'a, R: Read>(self, reader: &'a mut R) -> impl Iterator<Item=io::Result<i32>> + 'a {
+        (0..self.count).map(move |_| {
             self.endian.read_int32(reader)
         })
-        .collect()
     }
 
-    pub fn read_int16s<R: Read>(&self, reader: &mut R) -> io::Result<Vec<i16>> {
-        (0..self.count).map(|_| {
+    pub fn iter_int16s<'a, R: Read>(self, reader: &'a mut R) -> impl Iterator<Item=io::Result<i16>> + 'a {
+        (0..self.count).map(move |_| {
             self.endian.read_int16(reader)
         })
-        .collect()
     }
 
-    pub fn read_u8s<R: Read>(&self, reader: &mut R) -> io::Result<Vec<u8>> {
-        (0..self.count).map(|_| {
+    pub fn iter_u8s<'a, R: Read>(self, reader: &'a mut R) -> impl Iterator<Item=io::Result<u8>> + 'a {
+        (0..self.count).map(move |_| {
             self.endian.read_u8(reader)
         })
-        .collect()
+    }
+
+    // The following are convenience methods so you don't need to write collect::<io::Result<Vec<TYPE>>>() when you just want the bytes in a Vec
+
+    pub fn read_int32s<R: Read>(self, reader: &mut R) -> io::Result<Vec<i32>> {
+        self.iter_int32s(reader).collect()
+    }
+
+    pub fn read_int16s<R: Read>(self, reader: &mut R) -> io::Result<Vec<i16>> {
+        self.iter_int16s(reader).collect()
+    }
+
+    pub fn read_u8s<R: Read>(self, reader: &mut R) -> io::Result<Vec<u8>> {
+        self.iter_u8s(reader).collect()
     }
 }
 
-
+// see the second record section of https://www.nws.noaa.gov/oh/hrl/misc/xmrg.pdf
 #[derive(Debug)]
 pub enum XmrgVersion {
     Pre1997,
@@ -141,6 +153,14 @@ mod tests {
     //     let i = buff.as_int32();
     //     assert_eq!(i, 16_843_009);
     // }
+    #[test]
+    fn le_be_ne_test() {
+        let buff = [0b10101010, 0b11100101];
+
+        assert_eq!(u16::from_be_bytes(buff), 0b1010101011100101);
+        assert_eq!(u16::from_le_bytes(buff), 0b1110010110101010);
+        assert_eq!(u16::from_ne_bytes(buff), 0b1110010110101010);
+    }
 }
 
 
