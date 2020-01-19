@@ -14,6 +14,10 @@ use std::io::SeekFrom;
 // https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtolist.c
 // https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtoasc.c
 
+// const XOR: usize = 0;
+// const YOR: usize = 1;
+const COLUMNS: usize = 2;
+const ROWS: usize = 3;
 
 pub fn get_reader(path: &str) -> io::Result<BufReader<File>> {
     let file = File::open(path)?;
@@ -85,7 +89,7 @@ pub fn get_endian<R: Read>(reader: &mut R) -> io::Result<Endian> {
 
 #[derive(Debug, Copy, Clone)]
 pub struct ReadBytes {
-    count: u64,
+    count: i32,
     endian: Endian
 }
 
@@ -93,7 +97,7 @@ pub struct ReadBytes {
 // does self need to be a reference or can we consume it?
 impl ReadBytes {
 
-    pub fn new(count: u64, endian: Endian) -> Self {
+    pub fn new(count: i32, endian: Endian) -> Self {
         Self { count, endian }
     }
 
@@ -173,10 +177,54 @@ pub fn process_row<R: Read + Seek>(read_bytes: ReadBytes, reader: &mut R) -> io:
     result
 }
 
-pub fn process_data_set(max_y: i32, read_bytes: ReadBytes, reader: &mut R) -> io::Result<Vec<Vec<f64>>> {
-    (0..max_y).map(|_| {
-        
+pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
+    let mut reader = get_reader(path)?;
+    let endian = get_endian(&mut reader)?;
+
+    let header = ReadBytes::new(4,endian).read_int32s(&mut reader)?;
+    reader.seek(SeekFrom::Current(4))?;
+
+    let record_2_bytes = endian.read_int32(&mut reader)?;
+
+    let xmrg_version = get_xmrg_version(record_2_bytes, header[COLUMNS]);
+
+    let row_reader = ReadBytes::new(header[COLUMNS], endian);
+
+    let result = xmrg_version.map(|version| {
+        match version {
+            XmrgVersion::Pre1997 => {
+
+                let first_row = 
+                    row_reader
+                        .iter_int16s(&mut reader)
+                        .map(|res| res.map(to_mm))
+                        .collect::<io::Result<Vec<f64>>>()?;
+                
+                reader.seek(SeekFrom::Current(4))?;
+
+                let mut rows = vec![first_row];
+                // (0..1).map(|_| {
+                //     first_row
+                // })
+                // .chain(
+                //     (0..header[ROWS - 1]).map(|_i| {
+                //         process_row(row_reader, &mut reader)
+                //     })
+                // )
+                // .collect::<io::Result<Vec<Vec<f64>>>>()
+                for _ in 0..header[ROWS] - 1 {
+                    let row = process_row(row_reader, &mut reader)?;
+                    rows.push(row);
+                }
+
+                Ok(rows)
+            },
+            _ => Ok(Vec::new()) // not implemented
+        }
     })
+    .expect("Could not determine XMRG version");
+
+    result
 }
 
 
