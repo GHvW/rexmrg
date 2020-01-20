@@ -13,9 +13,10 @@ use std::io::SeekFrom;
 // https://www.nws.noaa.gov/oh/hrl/distmodel/hrap.htm
 // https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtolist.c
 // https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtoasc.c
+// HRAP https://www.nws.noaa.gov/oh/hrl/distmodel/hrap.htm
 
-// const XOR: usize = 0;
-// const YOR: usize = 1;
+const XOR: usize = 0;
+const YOR: usize = 1;
 const COLUMNS: usize = 2;
 const ROWS: usize = 3;
 
@@ -230,6 +231,46 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
     .expect("Could not determine XMRG version");
 
     result
+}
+
+pub struct Point {
+    x: i32,
+    y: i32
+}
+
+impl Point {
+    pub fn new(x: i32, y: i32) -> Self {
+        Self { x, y }
+    }
+}
+
+pub struct Header {
+    xor: i32,
+    yor: i32,
+    columns: i32,
+    rows: i32
+}
+
+impl Header {
+    pub fn from_vec(vec: Vec<i32>) -> Self {
+        Self {
+            xor: vec[XOR],
+            yor: vec[YOR],
+            columns: vec[COLUMNS],
+            rows: vec[ROWS]
+        }
+    }
+
+    
+    pub fn generate_coordinates(&self) -> Vec<Vec<Point>> {
+        (self.xor..self.rows).map(|y| {
+            (self.yor..self.columns).map(|x| {
+                Point::new(x, y)
+            })
+            .collect()
+        })
+        .collect()
+    }
 }
 
 
