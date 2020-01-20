@@ -233,6 +233,7 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
     result
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct Point {
     x: i32,
     y: i32
@@ -244,6 +245,7 @@ impl Point {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct Header {
     xor: i32,
     yor: i32,
