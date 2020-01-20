@@ -14,6 +14,7 @@ use std::io::SeekFrom;
 // https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtolist.c
 // https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtoasc.c
 // HRAP https://www.nws.noaa.gov/oh/hrl/distmodel/hrap.htm
+// HRAP FN https://www.xdc.arm.gov/xds/abrfc/hrap.c
 
 const XOR: usize = 0;
 const YOR: usize = 1;

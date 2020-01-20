@@ -1,8 +1,10 @@
 // use rexmrg::{ReadBytes, get_endian, get_reader, get_xmrg_version};
-use rexmrg::{read_xmrg, Header};
+// use rexmrg::{read_xmrg, Header};
+use rexmrg::{read_xmrg};
 use std::fs::File;
 use std::io::{Read};
 use std::io;
+use std::f64;
 // use std::io::SeekFrom;
 // use std::io::prelude::*;
 // use std::io::{self, Write};
@@ -17,9 +19,11 @@ fn main() -> io::Result<()> {
 
     // println!("{:?}", xmrg_data);
 
-    let avg = average(xmrg_data);
+    let avg = average(&xmrg_data);
+    let max = max(&xmrg_data);
 
     println!("The avg is {}", avg);
+    println!("The max is {}", max);
 
     // ********************* end v1 ********************************
 
@@ -57,7 +61,7 @@ pub fn tester(path: &str, stop: usize) -> io::Result<()> {
 }
 
 //this is gross, do something about it later
-pub fn average(data: Vec<Vec<f64>>) -> f64 {
+pub fn average(data: &Vec<Vec<f64>>) -> f64 {
     // let count = (data.len() * data[0].len()) as f64;
     let mut count = 0;
 
@@ -70,4 +74,11 @@ pub fn average(data: Vec<Vec<f64>>) -> f64 {
         .filter(|n| **n >= 0.0)
         .inspect(|_| count += 1)
         .sum::<f64>() / (count as f64)
+}
+
+pub fn max(data: &Vec<Vec<f64>>) -> f64 {
+    data.iter()
+        .flatten()
+        .filter(|n| **n >= 0.0)
+        .fold(f64::MIN, |current, n| current.max(*n))
 }
