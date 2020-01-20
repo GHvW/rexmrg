@@ -193,31 +193,36 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
     let result = xmrg_version.map(|version| {
         match version {
             XmrgVersion::Pre1997 => {
+                reader.seek(SeekFrom::Start(24))?; // set reader to position just after header (4 bytes + 16 byte header + 4 bytes = 24) 
 
-                let first_row = 
-                    row_reader
-                        .iter_int16s(&mut reader)
-                        .map(|res| res.map(to_mm))
-                        .collect::<io::Result<Vec<f64>>>()?;
+                (0..header[ROWS]).map(|_| {
+                    process_row(row_reader, &mut reader)
+                })
+                .collect()
+                // let first_row = 
+                //     row_reader
+                //         .iter_int16s(&mut reader)
+                //         .map(|res| res.map(to_mm))
+                //         .collect::<io::Result<Vec<f64>>>()?;
                 
-                reader.seek(SeekFrom::Current(4))?;
+                // reader.seek(SeekFrom::Current(4))?;
 
-                let mut rows = vec![first_row];
-                // (0..1).map(|_| {
-                //     first_row
-                // })
-                // .chain(
-                //     (0..header[ROWS - 1]).map(|_i| {
-                //         process_row(row_reader, &mut reader)
-                //     })
-                // )
-                // .collect::<io::Result<Vec<Vec<f64>>>>()
-                for _ in 0..header[ROWS] - 1 {
-                    let row = process_row(row_reader, &mut reader)?;
-                    rows.push(row);
-                }
+                // let mut rows = vec![first_row];
+                // // (0..1).map(|_| {
+                // //     first_row
+                // // })
+                // // .chain(
+                // //     (0..header[ROWS - 1]).map(|_i| {
+                // //         process_row(row_reader, &mut reader)
+                // //     })
+                // // )
+                // // .collect::<io::Result<Vec<Vec<f64>>>>()
+                // for _ in 0..header[ROWS] - 1 {
+                //     let row = process_row(row_reader, &mut reader)?;
+                //     rows.push(row);
+                // }
 
-                Ok(rows)
+                // Ok(rows)
             },
             _ => Ok(Vec::new()) // not implemented
         }
