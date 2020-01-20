@@ -5,6 +5,7 @@ use std::fs::File;
 // use std::fs;
 // use std::convert::TryInto;
 use std::io::SeekFrom;
+use std::f64::consts::PI;
 // use std::ops::Range;
 
 //https://www.nws.noaa.gov/oh/hrl/dmip/2/xmrgformat.html
@@ -14,7 +15,7 @@ use std::io::SeekFrom;
 // https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtolist.c
 // https://www.nws.noaa.gov/oh/hrl/gis/hrap/xmrgtoasc.c
 // HRAP https://www.nws.noaa.gov/oh/hrl/distmodel/hrap.htm
-// HRAP FN https://www.xdc.arm.gov/xds/abrfc/hrap.c
+// HRAP function https://www.nws.noaa.gov/oh/hrl/dmip/lat_lon.txt
 
 const XOR: usize = 0;
 const YOR: usize = 1;
@@ -236,12 +237,12 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Point {
-    x: i32,
-    y: i32
+    x: f64,
+    y: f64
 }
 
 impl Point {
-    pub fn new(x: i32, y: i32) -> Self {
+    pub fn new(x: f64, y: f64) -> Self {
         Self { x, y }
     }
 }
@@ -265,15 +266,48 @@ impl Header {
     }
 
     
-    pub fn generate_coordinates(&self) -> Vec<Vec<Point>> {
-        (self.xor..self.rows).map(|y| {
-            (self.yor..self.columns).map(|x| {
-                Point::new(x, y)
-            })
-            .collect()
-        })
-        .collect()
-    }
+    // pub fn generate_coordinates(&self) -> Vec<Vec<Point>> {
+    //     (self.xor..self.rows).map(|y| {
+    //         (self.yor..self.columns).map(|x| {
+    //             Point::new(x, y)
+    //         })
+    //         .collect()
+    //     })
+    //     .collect()
+    // }
+}
+
+pub fn hrap_to_latlon(x: f64, y: f64) -> Point {
+    let earthr = 6371.2;
+    let stlon = 105.0;
+    let raddeg = 180.0 / PI;
+    let xmesh = 4.7625;
+    let tlat = 60.0 / raddeg;
+
+    let _x = x - 401.0;
+    let _y = y - 1601.0;
+
+    let rr = (_x * _x) + (_y * _y);
+
+    let gi = (earthr * (1.0 + (tlat).sin())) / xmesh;
+    let gi = gi * gi;
+
+    let rlat = ((gi - rr) / (gi + rr)).asin() * raddeg;
+
+    let mut ang = y.atan2(x) * raddeg;
+
+    // let if (ang.lt.0.) ang = ang + 360.0;
+    ang += if ang < 0.0 { 360.0 } else { 0.0 }; 
+
+    let mut rlon = 270.0 + stlon - ang;
+
+    // let if(rlon.lt.0.) rlon=rlon+360.0;
+    rlon += if rlon < 0.0 { 360.0 } else { 0.0 };
+
+    // let if(rlon.gt.360.0) rlon = rlon - 360.0;
+    rlon -= if rlon > 360.0 { 360.0 } else { 0.0 };
+
+    Point::new(rlon, rlat)
 }
 
 

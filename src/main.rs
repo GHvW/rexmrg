@@ -1,6 +1,6 @@
 // use rexmrg::{ReadBytes, get_endian, get_reader, get_xmrg_version};
 // use rexmrg::{read_xmrg, Header};
-use rexmrg::{read_xmrg};
+use rexmrg::{read_xmrg, hrap_to_latlon};
 use std::fs::File;
 use std::io::{Read};
 use std::io;
@@ -25,6 +25,7 @@ fn main() -> io::Result<()> {
     println!("The avg is {}", avg);
     println!("The max is {}", max);
 
+    println!("long lat is {:?}", hrap_to_latlon(367.0, 263.0));
     // ********************* end v1 ********************************
 
     println!("---------- V2 ---------------");
