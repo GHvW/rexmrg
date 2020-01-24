@@ -290,11 +290,11 @@ pub fn hrap_to_latlon(x: f64, y: f64) -> Point {
     let rr = (_x * _x) + (_y * _y);
 
     let gi = (earthr * (1.0 + (tlat).sin())) / xmesh;
-    let gi = gi * gi;
+    let _gi = gi * gi;
 
-    let rlat = ((gi - rr) / (gi + rr)).asin() * raddeg;
+    let rlat = ((_gi - rr) / (_gi + rr)).asin() * raddeg;
 
-    let mut ang = y.atan2(x) * raddeg;
+    let mut ang = _y.atan2(_x) * raddeg;
 
     // let if (ang.lt.0.) ang = ang + 360.0;
     ang += if ang < 0.0 { 360.0 } else { 0.0 }; 
