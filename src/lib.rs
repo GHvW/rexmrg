@@ -245,6 +245,39 @@ impl Point {
     pub fn new(x: f64, y: f64) -> Self {
         Self { x, y }
     }
+
+    // pub fn as_geoJSON() -> String {
+    //     let s = format!("");
+    //     String::from("")
+    // }
+}
+
+pub struct CoordinateGenerator {
+    start_x: i32,
+    current_x: i32,
+    current_y: i32,
+    x_end: i32,
+    y_end: i32
+}
+
+impl Iterator for CoordinateGenerator {
+    type Item = Point;
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        self.current_x += 1;
+        if self.current_x == self.x_end {
+            self.current_x = self.start_x;
+            self.current_y += 1;
+        }
+        
+        println!("x: {}, y: {}", self.current_x, self.current_y);
+
+        if self.current_y != self.y_end {
+            Some(hrap_to_latlon(f64::from(self.current_x), f64::from(self.current_y)))
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -265,18 +298,43 @@ impl Header {
         }
     }
 
-    
-    // pub fn generate_coordinates(&self) -> Vec<Vec<Point>> {
-    //     (self.xor..self.rows).map(|y| {
-    //         (self.yor..self.columns).map(|x| {
-    //             Point::new(x, y)
+    pub fn generate_coordinates(&self) -> Vec<Vec<Point>> {
+        (self.yor..self.rows).map(|y| {
+            (self.xor..self.columns).map(|x| {
+                hrap_to_latlon(f64::from(x), f64::from(y))
+            })
+            .collect()
+        })
+        .collect()
+    }
+
+    // pub fn gen(&self) -> impl Iterator<Item=(i32, i32)> {
+    //     (self.yor..self.rows).map(|y| {
+    //         (self.xor..self.columns).map(|x| {
+    //             (x, y)
     //         })
-    //         .collect()
     //     })
-    //     .collect()
     // }
 }
 
+impl IntoIterator for Header {
+    type Item = Point;
+    type IntoIter = CoordinateGenerator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        CoordinateGenerator {
+            start_x: self.xor,
+            current_x: self.xor - 1,
+            current_y: self.yor,
+            x_end: self.columns,
+            y_end: self.rows
+        }
+    }
+}
+
+// HRAP : https://www.nws.noaa.gov/oh/hrl/nwsrfs/users_manual/part2/_pdf/21hrapgrid.pdf
+// positive longitude values are West, Positive latitude North
+// derived from https://www.nws.noaa.gov/oh/hrl/dmip/lat_lon.txt
 pub fn hrap_to_latlon(x: f64, y: f64) -> Point {
     let earthr = 6371.2;
     let stlon = 105.0;
@@ -284,12 +342,12 @@ pub fn hrap_to_latlon(x: f64, y: f64) -> Point {
     let xmesh = 4.7625;
     let tlat = 60.0 / raddeg;
 
-    let _x = x - 401.0;
-    let _y = y - 1601.0;
+    let _x = x - 401.0; // >
+    let _y = y - 1601.0; // >
 
     let rr = (_x * _x) + (_y * _y);
 
-    let gi = (earthr * (1.0 + (tlat).sin())) / xmesh;
+    let gi = (earthr * (1.0 + tlat.sin())) / xmesh;
     let _gi = gi * gi;
 
     let rlat = ((_gi - rr) / (_gi + rr)).asin() * raddeg;
