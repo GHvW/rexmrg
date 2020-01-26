@@ -1,13 +1,10 @@
 // use rexmrg::{ReadBytes, get_endian, get_reader, get_xmrg_version};
-// use rexmrg::{read_xmrg, Header};
 use rexmrg::{read_xmrg, hrap_to_latlon, Header};
 use std::fs::File;
 use std::io::{Read};
 use std::io;
 use std::f64;
-// use std::io::SeekFrom;
-// use std::io::prelude::*;
-// use std::io::{self, Write};
+
 
 fn main() -> io::Result<()> {
     println!("Hello, world!");
@@ -17,8 +14,6 @@ fn main() -> io::Result<()> {
     // ********************* start v1 ******************************
     let xmrg_data = read_xmrg("xmrg0506199516z.gz").unwrap();
 
-    // println!("{:?}", xmrg_data);
-
     let avg = average(&xmrg_data);
     let max = max(&xmrg_data);
 
@@ -27,7 +22,7 @@ fn main() -> io::Result<()> {
 
     println!("long lat is {:?}", hrap_to_latlon(367.0, 263.0));
     println!("other lat long is {:?}", hrap_to_latlon(367.0 + 335.0 , 263.0 + 159.0));
-    println!("other lat long max x, min y is {:?}", hrap_to_latlon(367.0 + 335.0 , 263.0));
+    println!("other lat long max x, min y is {:?}", hrap_to_latlon(367.0 + 334.0 , 350.0));
     // ********************* end v1 ********************************
 
     println!("---------- V2 ---------------");
@@ -53,11 +48,6 @@ fn main() -> io::Result<()> {
     //     println!("coordinate is {:?}", p);
     // }
     
-
-    // let test_header = Header::from_vec(vec![367, 263, 335, 159]);
-
-    // println!("coordinates\n{:?}", test_header.generate_coordinates());
-
     // ********************* end v2 ********************************
 
     

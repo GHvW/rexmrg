@@ -202,30 +202,6 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
                     process_row(row_reader, &mut reader)
                 })
                 .collect()
-                // let first_row = 
-                //     row_reader
-                //         .iter_int16s(&mut reader)
-                //         .map(|res| res.map(to_mm))
-                //         .collect::<io::Result<Vec<f64>>>()?;
-                
-                // reader.seek(SeekFrom::Current(4))?;
-
-                // let mut rows = vec![first_row];
-                // // (0..1).map(|_| {
-                // //     first_row
-                // // })
-                // // .chain(
-                // //     (0..header[ROWS - 1]).map(|_i| {
-                // //         process_row(row_reader, &mut reader)
-                // //     })
-                // // )
-                // // .collect::<io::Result<Vec<Vec<f64>>>>()
-                // for _ in 0..header[ROWS] - 1 {
-                //     let row = process_row(row_reader, &mut reader)?;
-                //     rows.push(row);
-                // }
-
-                // Ok(rows)
             },
             _ => Ok(Vec::new()) // not implemented
         }
@@ -269,8 +245,6 @@ impl Iterator for CoordinateGenerator {
             self.current_x = self.start_x;
             self.current_y += 1;
         }
-        
-        println!("x: {}, y: {}", self.current_x, self.current_y);
 
         if self.current_y != self.y_end {
             Some(hrap_to_latlon(f64::from(self.current_x), f64::from(self.current_y)))
@@ -307,14 +281,6 @@ impl Header {
         })
         .collect()
     }
-
-    // pub fn gen(&self) -> impl Iterator<Item=(i32, i32)> {
-    //     (self.yor..self.rows).map(|y| {
-    //         (self.xor..self.columns).map(|x| {
-    //             (x, y)
-    //         })
-    //     })
-    // }
 }
 
 impl IntoIterator for Header {
@@ -326,8 +292,8 @@ impl IntoIterator for Header {
             start_x: self.xor,
             current_x: self.xor - 1,
             current_y: self.yor,
-            x_end: self.columns,
-            y_end: self.rows
+            x_end: self.xor + self.columns,
+            y_end: self.yor + self.rows
         }
     }
 }
