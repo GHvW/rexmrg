@@ -138,7 +138,7 @@ impl ReadBytes {
 }
 
 // see the second record section of https://www.nws.noaa.gov/oh/hrl/misc/xmrg.pdf
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum XmrgVersion {
     Pre1997,
     Build4_2,
@@ -221,11 +221,6 @@ impl Point {
     pub fn new(x: f64, y: f64) -> Self {
         Self { x, y }
     }
-
-    // pub fn as_geoJSON() -> String {
-    //     let s = format!("");
-    //     String::from("")
-    // }
 }
 
 pub struct CoordinateGenerator {
@@ -334,17 +329,22 @@ pub fn hrap_to_latlon(x: f64, y: f64) -> Point {
     Point::new(rlon, rlat)
 }
 
+pub struct XmrgData {
+    values: Vec<Vec<f64>>,
+    points: Vec<Vec<Point>>
+}
+
+impl XmrgData {
+    pub fn new(values: Vec<Vec<f64>>, points: Vec<Vec<Point>>) -> Self {
+        XmrgData { values, points }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
+    use super::*;
 
-    // #[test]
-    // fn as_int32_test() {
-    //     let buff = [1, 1, 1, 1];
-    //     let i = buff.as_int32();
-    //     assert_eq!(i, 16_843_009);
-    // }
     #[test]
     fn le_be_ne_test() {
         let buff = [0b10101010, 0b11100101];
@@ -352,6 +352,33 @@ mod tests {
         assert_eq!(u16::from_be_bytes(buff), 0b1010101011100101);
         assert_eq!(u16::from_le_bytes(buff), 0b1110010110101010);
         assert_eq!(u16::from_ne_bytes(buff), 0b1110010110101010);
+    }
+
+    #[test]
+    fn get_xmrg_version_test() {
+        let columns = 100;
+        let first_byte_count = 66;
+        let second_byte_count = 38;
+
+        let v1 = get_xmrg_version(first_byte_count, columns);
+        assert_eq!(v1, Some(XmrgVersion::Build5_2_2));
+
+        let v2 = get_xmrg_version(second_byte_count, columns);
+        assert_eq!(v2, Some(XmrgVersion::Build4_2));
+
+        let v3 = get_xmrg_version(columns * 2, columns);
+        assert_eq!(v3, Some(XmrgVersion::Pre1997));
+    }
+
+    #[test]
+    fn hrap_to_latlon_test() { // write a better test here
+        let hrap_x = 367.0;
+        let hrap_y = 263.0;
+
+        let point = hrap_to_latlon(hrap_x, hrap_y);
+
+        assert!(point.x > 106.0 && point.x < 107.0);
+        assert!(point.y > 33.0 && point.y < 34.0);
     }
 }
 
