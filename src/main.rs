@@ -22,7 +22,8 @@ fn main() -> io::Result<()> {
 
     println!("long lat is {:?}", hrap_to_latlon(367.0, 263.0));
     println!("other lat long is {:?}", hrap_to_latlon(367.0 + 335.0 , 263.0 + 159.0));
-    println!("other lat long max x, min y is {:?}", hrap_to_latlon(367.0 + 334.0 , 350.0));
+    println!("other lat long max x, min y is {:?}", hrap_to_latlon(367.0 + 334.0 , 263.0));
+    println!("other lat long max x, min y is {:?}", hrap_to_latlon(367.0, 263.0 + 158.0));
     // ********************* end v1 ********************************
 
     println!("---------- V2 ---------------");

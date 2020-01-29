@@ -193,7 +193,7 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
 
     let row_reader = ReadBytes::new(header[COLUMNS], endian);
 
-    let result = xmrg_version.map(|version| {
+    xmrg_version.map_or(Ok(Vec::new()), |version| {
         match version {
             XmrgVersion::Pre1997 => {
                 reader.seek(SeekFrom::Start(24))?; // set reader to position just after header (4 bytes + 16 byte header + 4 bytes = 24) 
@@ -206,9 +206,6 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
             _ => Ok(Vec::new()) // not implemented
         }
     })
-    .expect("Could not determine XMRG version");
-
-    result
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -329,16 +326,17 @@ pub fn hrap_to_latlon(x: f64, y: f64) -> Point {
     Point::new(rlon, rlat)
 }
 
-pub struct XmrgData {
-    values: Vec<Vec<f64>>,
-    points: Vec<Vec<Point>>
-}
+// TODO - a decent public api
+// pub struct XmrgData {
+//     values: Vec<Vec<f64>>,
+//     points: Vec<Vec<Point>>
+// }
 
-impl XmrgData {
-    pub fn new(values: Vec<Vec<f64>>, points: Vec<Vec<Point>>) -> Self {
-        XmrgData { values, points }
-    }
-}
+// impl XmrgData {
+//     pub fn new(values: Vec<Vec<f64>>, points: Vec<Vec<Point>>) -> Self {
+//         XmrgData { values, points }
+//     }
+// }
 
 
 #[cfg(test)]
