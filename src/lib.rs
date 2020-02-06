@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::SeekFrom;
 use std::f64::consts::PI;
 // use std::ops::Range;
+// use std::num::ParseIntError;
 
 //https://www.nws.noaa.gov/oh/hrl/dmip/2/xmrgformat.html
 // https://www.nws.noaa.gov/oh/hrl/misc/xmrg.pdf
@@ -208,6 +209,36 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
     })
 }
 
+
+#[derive(Debug, Copy, Clone)]
+pub struct DateSegments {
+    month: i32,
+    day: i32,
+    year: i32,
+    hour: i32 // in 24 hour time
+}
+
+impl DateSegments {
+    // look into better strategy than indexing
+    pub fn from_chars(chars: &str) -> Self {
+        // assert_eq!(chars.len(), 10);
+        DateSegments {
+            month: chars[0..2].parse::<i32>().unwrap_or_default(),
+            day: chars[2..4].parse::<i32>().unwrap_or_default(),
+            year: chars[4..8].parse::<i32>().unwrap_or_default(),
+            hour: chars[8..10].parse::<i32>().unwrap_or_default(),
+        }
+    }
+}
+
+pub fn read_old_xmrg_date(path: &str) -> DateSegments {
+    let date_chars = path.chars()
+        .skip_while(|c| *c < '0' || *c > '9')
+        .collect::<String>();
+
+    DateSegments::from_chars(&date_chars)
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Point {
     x: f64,
@@ -377,6 +408,18 @@ mod tests {
 
         assert!(point.x > 106.0 && point.x < 107.0);
         assert!(point.y > 33.0 && point.y < 34.0);
+    }
+
+    #[test]
+    fn read_old_xmrg_date_test() {
+        let path = "xmrg0506199516z.gz";
+
+        let data_segments = read_old_xmrg_date(&path);
+
+        assert_eq!(data_segments.month, 5);
+        assert_eq!(data_segments.day, 6);       
+        assert_eq!(data_segments.year, 1995);
+        assert_eq!(data_segments.hour, 16);
     }
 }
 
