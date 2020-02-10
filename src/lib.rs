@@ -386,7 +386,9 @@ impl XmrgData {
         XmrgData { header, values }
     }
 
-    pub fn generate_features(&self) -> Vec<Feature> {
+    // https://github.com/rust-lang/rfcs/blob/master/text/1951-expand-impl-trait.md#scoping-for-type-and-lifetime-parameters
+    // pub fn generate_features<'a>(&'a self) -> impl Iterator<Item=Feature> + 'a {
+    pub fn generate_features(&self) -> impl Iterator<Item=Feature> + '_ {
 
         self.values.iter()
             .flat_map(|vec| vec.iter())
@@ -394,7 +396,6 @@ impl XmrgData {
             .map(|(value, point)| {
                 Feature::new(point, *value)
             })
-            .collect()
     }
 }
 
