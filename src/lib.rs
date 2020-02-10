@@ -8,6 +8,7 @@ use std::io::SeekFrom;
 use std::f64::consts::PI;
 // use std::ops::Range;
 // use std::num::ParseIntError;
+// use std::iter;
 
 //https://www.nws.noaa.gov/oh/hrl/dmip/2/xmrgformat.html
 // https://www.nws.noaa.gov/oh/hrl/misc/xmrg.pdf
@@ -357,17 +358,45 @@ pub fn hrap_to_latlon(x: f64, y: f64) -> Point {
     Point::new(rlon, rlat)
 }
 
-// TODO - a decent public api
-// pub struct XmrgData {
-//     values: Vec<Vec<f64>>,
-//     points: Vec<Vec<Point>>
-// }
+pub struct Feature {
+    point: Point,
+    value: f64
+}
 
-// impl XmrgData {
-//     pub fn new(values: Vec<Vec<f64>>, points: Vec<Vec<Point>>) -> Self {
-//         XmrgData { values, points }
-//     }
-// }
+impl Feature {
+
+    pub fn new(point: Point, value: f64) -> Self {
+        Feature { point, value }
+    }
+
+    pub fn csv_row(&self) -> String {
+        // long lat value
+        String::from(format!("{},{},{}", self.point.x, self.point.y, self.value))
+    }
+}
+
+pub struct XmrgData {
+    header: Header,
+    values: Vec<Vec<f64>>,
+}
+
+impl XmrgData {
+
+    pub fn new(header: Header, values: Vec<Vec<f64>>) -> Self {
+        XmrgData { header, values }
+    }
+
+    pub fn generate_features(&self) -> Vec<Feature> {
+
+        self.values.iter()
+            .flat_map(|vec| vec.iter())
+            .zip(self.header.into_iter())
+            .map(|(value, point)| {
+                Feature::new(point, *value)
+            })
+            .collect()
+    }
+}
 
 
 #[cfg(test)]
