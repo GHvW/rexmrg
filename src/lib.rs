@@ -182,7 +182,8 @@ pub fn process_row<R: Read + Seek>(read_bytes: ReadBytes, reader: &mut R) -> io:
     result
 }
 
-pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
+// pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
+pub fn read_xmrg(path: &str) -> io::Result<XmrgData> {
     let mut reader = get_reader(path)?;
     let endian = get_endian(&mut reader)?;
 
@@ -195,7 +196,7 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
 
     let row_reader = ReadBytes::new(header[COLUMNS], endian);
 
-    xmrg_version.map_or(Ok(Vec::new()), |version| {
+    let values = xmrg_version.map_or(Ok(Vec::new()), |version| {
         match version {
             XmrgVersion::Pre1997 => {
                 reader.seek(SeekFrom::Start(24))?; // set reader to position just after header (4 bytes + 16 byte header + 4 bytes = 24) 
@@ -207,7 +208,9 @@ pub fn read_xmrg(path: &str) -> io::Result<Vec<Vec<f64>>> {
             },
             _ => Ok(Vec::new()) // not implemented
         }
-    })
+    })?;
+
+    Ok(XmrgData::new(Header::from_vec(header), values))
 }
 
 
@@ -376,8 +379,8 @@ impl Feature {
 }
 
 pub struct XmrgData {
-    header: Header,
-    values: Vec<Vec<f64>>,
+    pub header: Header,
+    pub values: Vec<Vec<f64>>,
 }
 
 impl XmrgData {

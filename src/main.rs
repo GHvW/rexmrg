@@ -6,6 +6,7 @@ use std::io;
 use std::f64;
 
 
+// structop
 fn main() -> io::Result<()> {
     println!("Hello, world!");
 
@@ -14,8 +15,8 @@ fn main() -> io::Result<()> {
     // ********************* start v1 ******************************
     let xmrg_data = read_xmrg("xmrg0506199516z.gz").unwrap();
 
-    let avg = average(&xmrg_data);
-    let max = max(&xmrg_data);
+    let avg = average(&xmrg_data.values);
+    let max = max(&xmrg_data.values);
 
     println!("The avg is {}", avg);
     println!("The max is {}", max);
