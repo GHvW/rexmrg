@@ -1,5 +1,5 @@
 // use rexmrg::{ReadBytes, get_endian, get_reader, get_xmrg_version};
-use rexmrg::{read_xmrg, hrap_to_latlon, Header};
+use rexmrg::{read_xmrg };
 use std::fs::File;
 use std::io::{Read};
 use std::io;
@@ -21,44 +21,13 @@ fn main() -> io::Result<()> {
     println!("The avg is {}", avg);
     println!("The max is {}", max);
 
-    println!("long lat is {:?}", hrap_to_latlon(367.0, 263.0));
-    println!("other lat long is {:?}", hrap_to_latlon(367.0 + 335.0 , 263.0 + 159.0));
-    println!("other lat long max x, min y is {:?}", hrap_to_latlon(367.0 + 334.0 , 263.0));
-    println!("other lat long max x, min y is {:?}", hrap_to_latlon(367.0, 263.0 + 158.0));
     // ********************* end v1 ********************************
 
     println!("---------- V2 ---------------");
     // ********************* start v2 ******************************
-
-    let fake_header = Header::from_vec(vec![367, 263, 335, 159]);
-
-    let mut iter = fake_header.into_iter();
-
-    println!("first coord: {:?}", iter.next().unwrap());
-    println!("second coord: {:?}", iter.next().unwrap());
-    println!("third coord: {:?}", iter.next().unwrap());
-
-    let f_h = Header::from_vec(vec![367, 263 + 158 , 335, 159]);
-
-    let mut iter2 = f_h.into_iter();
-
-    println!("2 first coord: {:?}", iter2.next().unwrap());
-    println!("2 second coord: {:?}", iter2.next().unwrap());
-    println!("2 third coord: {:?}", iter2.next().unwrap());
-
-    // for p in iter {
-    //     println!("coordinate is {:?}", p);
-    // }
-    
+   
     // ********************* end v2 ********************************
-
-    
-    println!("now for the tester");
-
-    // tester("xmrg0506199516z.gz", 400).unwrap();
-
     println!("Fin ...");
-
     // io::stdout().write_all(&row1_in_mm)?;
 
     Ok(())
