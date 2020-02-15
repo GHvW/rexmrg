@@ -97,6 +97,10 @@ impl DateSegments {
             hour: chars[8..10].parse::<i32>().unwrap_or_default(),
         }
     }
+
+    pub fn str_from_date(&self) -> String {
+        format!("{}-{}-{} {}:00:00", self.month, self.day, self.month, self.hour)
+    }
 }
 
 pub fn read_old_xmrg_date(path: &str) -> DateSegments {
@@ -106,6 +110,112 @@ pub fn read_old_xmrg_date(path: &str) -> DateSegments {
 
     DateSegments::from_chars(&date_chars)
 }
+
+pub struct Build1997Header {
+    user_id: String,
+    saved_datetime: String,
+    process_flag: String
+}
+
+pub struct Build4_2Additions {
+    valid_datetime: String,
+    max_value: i32,
+    version_number: f32
+}
+
+pub struct Build4_2Header {
+    original: Build1997Header,
+    build_4_2_additions: Build4_2Additions 
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum OperSys {
+    HP,
+    LX
+}
+
+pub struct Build5_2_2Header {
+    operating_system: OperSys,
+    user_id: String,
+    saved_datetime: String,
+    process_flag: String,
+    build_4_2_additions: Build4_2Additions
+}
+
+pub enum MetaData {
+    Date(DateSegments),
+    Header1997(Build1997Header),
+    Header4_2(Build4_2Header),
+    Header5_2_2(Build5_2_2Header)
+}
+
+impl MetaData {
+    // DEBUG - come back to this
+    pub fn datetime(&self) -> String {
+        match self {
+            MetaData::Date(date) => date.str_from_date(),
+            MetaData::Header1997(header) => header.saved_datetime.clone(),
+            MetaData::Header4_2(header) => header.original.saved_datetime.clone(),
+            MetaData::Header5_2_2(header) => header.saved_datetime.clone()
+        }
+    }
+
+    pub fn os(&self) -> Option<OperSys> {
+        match self {
+            MetaData::Date(_) => None,
+            MetaData::Header1997(_) => None,
+            MetaData::Header4_2(_) => None,
+            MetaData::Header5_2_2(header) => Some(header.operating_system)
+        }
+    }
+
+    pub fn max_value(&self) -> Option<i32> {
+        match self {
+            MetaData::Date(_) => None,
+            MetaData::Header1997(_) => None,
+            MetaData::Header4_2(header) => Some(header.build_4_2_additions.max_value),
+            MetaData::Header5_2_2(header) => Some(header.build_4_2_additions.max_value)
+        }
+    }
+
+    // DEBUG - revisit this one
+    pub fn user_id(&self) -> Option<String> {
+        match self {
+            MetaData::Date(_) => None,
+            MetaData::Header1997(header) => Some(header.user_id.clone()),
+            MetaData::Header4_2(header) => Some(header.original.user_id.clone()),
+            MetaData::Header5_2_2(header) => Some(header.user_id.clone())
+        }
+    }
+
+    pub fn process_flag(&self) -> Option<String> {
+        match self {
+            MetaData::Date(_) => None,
+            MetaData::Header1997(header) => Some(header.process_flag.clone()),
+            MetaData::Header4_2(header) => Some(header.original.process_flag.clone()),
+            MetaData::Header5_2_2(header) => Some(header.process_flag.clone())
+        }
+    }
+
+    pub fn version(&self) -> Option<f32> {
+        match self {
+            MetaData::Date(_) => None,
+            MetaData::Header1997(_) => None,
+            MetaData::Header4_2(header) => Some(header.build_4_2_additions.version_number),
+            MetaData::Header5_2_2(header) => Some(header.build_4_2_additions.version_number)
+        }
+    }
+
+    pub fn valid_datetime(&self) -> Option<String> {
+        match self {
+            MetaData::Date(_) => None,
+            MetaData::Header1997(_) => None,
+            MetaData::Header4_2(header) => Some(header.build_4_2_additions.valid_datetime.clone()),
+            MetaData::Header5_2_2(header) => Some(header.build_4_2_additions.valid_datetime.clone())
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
