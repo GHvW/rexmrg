@@ -19,7 +19,8 @@ use xmrg_version::{ XmrgVersion, get_xmrg_version };
 use headers::Header;
 use geo::Feature;
 
-//https://www.nws.noaa.gov/oh/hrl/dmip/2/xmrgformat.html
+// https://tgftp.nws.noaa.gov/data/rfc/wgrfc/
+// https://www.nws.noaa.gov/oh/hrl/dmip/2/xmrgformat.html
 // https://www.nws.noaa.gov/oh/hrl/misc/xmrg.pdf
 // https://www.nws.noaa.gov/oh/hrl/dmip/2/src/read_xmrg2.c
 // https://www.nws.noaa.gov/oh/hrl/distmodel/hrap.htm
