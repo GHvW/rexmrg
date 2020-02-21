@@ -16,7 +16,7 @@ use utils::to_mm;
 use endian::{ get_endian };
 use read_bytes::ReadBytes;
 use xmrg_version::{ XmrgVersion, get_xmrg_version };
-use headers::Header;
+use headers::{ Header, Metadata };
 use geo::Feature;
 
 // https://tgftp.nws.noaa.gov/data/rfc/wgrfc/
@@ -74,29 +74,37 @@ pub fn read_xmrg(path: &str) -> io::Result<XmrgData> {
             XmrgVersion::Pre1997 => {
                 reader.seek(SeekFrom::Start(24))?; // set reader to position just after header (4 bytes + 16 byte header + 4 bytes = 24) 
 
-                (0..header[ROWS]).map(|_| {
-                    process_row(row_reader, &mut reader)
-                })
-                .collect()
+                (0..header[ROWS])
+                    .map(|_| {
+                        process_row(row_reader, &mut reader)
+                    })
+                    .collect()
             },
+            // XmrgVersion::Build4_2 => {
+
+            // },
+            // XmrgVersion::Build5_2_2 => {
+
+            // },
             _ => Ok(Vec::new()) // not implemented
         }
     })?;
 
-    Ok(XmrgData::new(Header::from_vec(header), values))
+    Ok(XmrgData::new(Header::from_vec(header), None, values))
 }
 
 
 
 pub struct XmrgData {
     pub header: Header,
+    pub metadata: Option<Metadata>,
     pub values: Vec<Vec<f64>>,
 }
 
 impl XmrgData {
 
-    pub fn new(header: Header, values: Vec<Vec<f64>>) -> Self {
-        XmrgData { header, values }
+    pub fn new(header: Header, metadata: Option<Metadata>, values: Vec<Vec<f64>>) -> Self {
+        XmrgData { header, metadata, values }
     }
 
     // https://github.com/rust-lang/rfcs/blob/master/text/1951-expand-impl-trait.md#scoping-for-type-and-lifetime-parameters

@@ -84,15 +84,47 @@ pub struct Build1997Header {
     process_flag: String
 }
 
+impl Build1997Header {
+
+    pub fn new(user_id: String, saved_datetime: String, process_flag: String) -> Self {
+        Build1997Header {
+            user_id,
+            saved_datetime,
+            process_flag
+        }
+    }
+}
+
 pub struct Build4_2Additions {
     valid_datetime: String,
     max_value: i32,
     version_number: f32
 }
 
+impl Build4_2Additions {
+
+    pub fn new(valid_datetime: String, max_value: i32, version_number: f32) -> Self {
+        Build4_2Additions {
+            valid_datetime,
+            max_value,
+            version_number
+        }
+    }
+}
+
 pub struct Build4_2Header {
     original: Build1997Header,
     build_4_2_additions: Build4_2Additions 
+}
+
+impl Build4_2Header {
+
+    pub fn new(user_id: String, saved_datetime: String, process_flag: String, valid_datetime: String, max_value: i32, version_number: f32) -> Self {
+        Build4_2Header {
+            original: Build1997Header::new(user_id, saved_datetime, process_flag),
+            build_4_2_additions: Build4_2Additions::new(valid_datetime, max_value, version_number)
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -109,68 +141,89 @@ pub struct Build5_2_2Header {
     build_4_2_additions: Build4_2Additions
 }
 
-pub enum MetaData {
+impl Build5_2_2Header {
+
+    pub fn new(operating_system: OperSys, 
+               user_id: String, 
+               saved_datetime: String, 
+               process_flag: String, 
+               valid_datetime: String, 
+               max_value: i32, 
+               version_number: f32) -> Self {
+
+        Build5_2_2Header {
+            operating_system,
+            user_id,
+            saved_datetime,
+            process_flag,
+            build_4_2_additions: Build4_2Additions::new(valid_datetime, max_value, version_number)
+        }
+    }
+}
+
+
+pub enum Metadata {
     Header1997(Build1997Header),
     Header4_2(Build4_2Header),
     Header5_2_2(Build5_2_2Header)
 }
 
-impl MetaData {
+impl Metadata {
     // DEBUG - come back to this
     pub fn datetime(&self) -> String {
         match self {
-            MetaData::Header1997(header) => header.saved_datetime.clone(),
-            MetaData::Header4_2(header) => header.original.saved_datetime.clone(),
-            MetaData::Header5_2_2(header) => header.saved_datetime.clone()
+            Metadata::Header1997(header) => header.saved_datetime.clone(),
+            Metadata::Header4_2(header) => header.original.saved_datetime.clone(),
+            Metadata::Header5_2_2(header) => header.saved_datetime.clone()
         }
     }
 
     pub fn os(&self) -> Option<OperSys> {
         match self {
-            MetaData::Header1997(_) => None,
-            MetaData::Header4_2(_) => None,
-            MetaData::Header5_2_2(header) => Some(header.operating_system)
+            Metadata::Header1997(_) => None,
+            Metadata::Header4_2(_) => None,
+            Metadata::Header5_2_2(header) => Some(header.operating_system)
         }
     }
 
     pub fn max_value(&self) -> Option<i32> {
         match self {
-            MetaData::Header1997(_) => None,
-            MetaData::Header4_2(header) => Some(header.build_4_2_additions.max_value),
-            MetaData::Header5_2_2(header) => Some(header.build_4_2_additions.max_value)
+            Metadata::Header1997(_) => None,
+            Metadata::Header4_2(header) => Some(header.build_4_2_additions.max_value),
+            Metadata::Header5_2_2(header) => Some(header.build_4_2_additions.max_value)
         }
     }
 
     // DEBUG - revisit this one
     pub fn user_id(&self) -> Option<String> {
         match self {
-            MetaData::Header1997(header) => Some(header.user_id.clone()),
-            MetaData::Header4_2(header) => Some(header.original.user_id.clone()),
-            MetaData::Header5_2_2(header) => Some(header.user_id.clone())
+            Metadata::Header1997(header) => Some(header.user_id.clone()),
+            Metadata::Header4_2(header) => Some(header.original.user_id.clone()),
+            Metadata::Header5_2_2(header) => Some(header.user_id.clone())
         }
     }
 
     pub fn process_flag(&self) -> Option<String> {
         match self {
-            MetaData::Header1997(header) => Some(header.process_flag.clone()),
-            MetaData::Header4_2(header) => Some(header.original.process_flag.clone()),
-            MetaData::Header5_2_2(header) => Some(header.process_flag.clone())
+            Metadata::Header1997(header) => Some(header.process_flag.clone()),
+            Metadata::Header4_2(header) => Some(header.original.process_flag.clone()),
+            Metadata::Header5_2_2(header) => Some(header.process_flag.clone())
         }
     }
 
     pub fn version(&self) -> Option<f32> {
         match self {
-            MetaData::Header1997(_) => None,
-            MetaData::Header4_2(header) => Some(header.build_4_2_additions.version_number),
-            MetaData::Header5_2_2(header) => Some(header.build_4_2_additions.version_number)
+            Metadata::Header1997(_) => None,
+            Metadata::Header4_2(header) => Some(header.build_4_2_additions.version_number),
+            Metadata::Header5_2_2(header) => Some(header.build_4_2_additions.version_number)
         }
     }
 
     pub fn valid_datetime(&self) -> Option<String> {
         match self {
-            MetaData::Header1997(_) => None,
-            MetaData::Header4_2(header) => Some(header.build_4_2_additions.valid_datetime.clone()),
-            MetaData::Header5_2_2(header) => Some(header.build_4_2_additions.valid_datetime.clone())
+            Metadata::Header1997(_) => None,
+            Metadata::Header4_2(header) => Some(header.build_4_2_additions.valid_datetime.clone()),
+            Metadata::Header5_2_2(header) => Some(header.build_4_2_additions.valid_datetime.clone())
         }
     }
 }
@@ -253,22 +306,5 @@ mod tests {
 
     //     let ds2 = read_xmrg_date(&p2).unwrap();
     // }
-
-    // let fake_header = Header::from_vec(vec![367, 263, 335, 159]);
-
-    // let mut iter = fake_header.into_iter();
-
-    // println!("first coord: {:?}", iter.next().unwrap());
-    // println!("second coord: {:?}", iter.next().unwrap());
-    // println!("third coord: {:?}", iter.next().unwrap());
-
-    // let f_h = Header::from_vec(vec![367, 263 + 158 , 335, 159]);
-
-    // let mut iter2 = f_h.into_iter();
-
-    // println!("2 first coord: {:?}", iter2.next().unwrap());
-    // println!("2 second coord: {:?}", iter2.next().unwrap());
-    // println!("2 third coord: {:?}", iter2.next().unwrap());
-
 
 }
