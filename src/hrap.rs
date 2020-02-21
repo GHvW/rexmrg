@@ -1,5 +1,5 @@
-use std::f64::consts::PI;
 use crate::geo::Point;
+use std::f64::consts::PI;
 
 // HRAP : https://www.nws.noaa.gov/oh/hrl/nwsrfs/users_manual/part2/_pdf/21hrapgrid.pdf
 // positive longitude values are West, Positive latitude North
@@ -24,7 +24,7 @@ pub fn hrap_to_latlon(x: f64, y: f64) -> Point {
     let mut ang = _y.atan2(_x) * raddeg;
 
     // let if (ang.lt.0.) ang = ang + 360.0;
-    ang += if ang < 0.0 { 360.0 } else { 0.0 }; 
+    ang += if ang < 0.0 { 360.0 } else { 0.0 };
 
     let mut rlon = 270.0 + stlon - ang;
 
@@ -37,13 +37,13 @@ pub fn hrap_to_latlon(x: f64, y: f64) -> Point {
     Point::new(rlon, rlat)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn hrap_to_latlon_test() { // write a better test here
+    fn hrap_to_latlon_test() {
+        // write a better test here
         let hrap_x = 367.0;
         let hrap_y = 263.0;
 

@@ -1,9 +1,7 @@
-
-
 #[derive(Debug, Copy, Clone)]
 pub struct Point {
     pub x: f64,
-    pub y: f64
+    pub y: f64,
 }
 
 impl Point {
@@ -12,14 +10,12 @@ impl Point {
     }
 }
 
-
 pub struct Feature {
     point: Point,
-    value: f64
+    value: f64,
 }
 
 impl Feature {
-
     pub fn new(point: Point, value: f64) -> Self {
         Feature { point, value }
     }

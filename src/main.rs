@@ -1,15 +1,13 @@
 // use rexmrg::{ReadBytes, get_endian, get_reader, get_xmrg_version};
-use rexmrg::{read_xmrg };
-use std::fs::File;
-use std::io::{Read};
-use std::io;
+use rexmrg::read_xmrg;
 use std::f64;
-
+use std::fs::File;
+use std::io;
+use std::io::Read;
 
 // structop
 fn main() -> io::Result<()> {
     println!("Hello, world!");
-
 
     println!("------------ V1 --------------");
     // ********************* start v1 ******************************
@@ -25,7 +23,7 @@ fn main() -> io::Result<()> {
 
     println!("---------- V2 ---------------");
     // ********************* start v2 ******************************
-   
+
     // ********************* end v2 ********************************
     println!("Fin ...");
     // io::stdout().write_all(&row1_in_mm)?;
@@ -38,8 +36,12 @@ pub fn tester(path: &str, stop: usize) -> io::Result<()> {
 
     for (i, b) in file.bytes().enumerate() {
         println!("byte {} is: {:b}", i, b.unwrap());
-        if (i + 1) % 4 == 0 { println!("*********  INT!! *********"); }
-        if i > 0 && (i - 1) == stop { break; }
+        if (i + 1) % 4 == 0 {
+            println!("*********  INT!! *********");
+        }
+        if i > 0 && (i - 1) == stop {
+            break;
+        }
     }
 
     Ok(())
@@ -58,7 +60,8 @@ pub fn average(data: &Vec<Vec<f64>>) -> f64 {
         .flatten()
         .filter(|n| **n >= 0.0)
         .inspect(|_| count += 1)
-        .sum::<f64>() / (count as f64)
+        .sum::<f64>()
+        / (count as f64)
 }
 
 pub fn max(data: &Vec<Vec<f64>>) -> f64 {

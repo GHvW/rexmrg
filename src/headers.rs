@@ -6,18 +6,17 @@ const YOR: usize = 1;
 const COLUMNS: usize = 2;
 const ROWS: usize = 3;
 
-
 pub struct CoordinateGenerator {
     start_x: i32,
     current_x: i32,
     current_y: i32,
     x_end: i32,
-    y_end: i32
+    y_end: i32,
 }
 
 impl Iterator for CoordinateGenerator {
     type Item = Point;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         self.current_x += 1;
         if self.current_x == self.x_end {
@@ -26,7 +25,10 @@ impl Iterator for CoordinateGenerator {
         }
 
         if self.current_y != self.y_end {
-            Some(hrap_to_latlon(f64::from(self.current_x), f64::from(self.current_y)))
+            Some(hrap_to_latlon(
+                f64::from(self.current_x),
+                f64::from(self.current_y),
+            ))
         } else {
             None
         }
@@ -38,7 +40,7 @@ pub struct Header {
     xor: i32,
     yor: i32,
     columns: i32,
-    rows: i32
+    rows: i32,
 }
 
 impl Header {
@@ -47,7 +49,7 @@ impl Header {
             xor: vec[XOR],
             yor: vec[YOR],
             columns: vec[COLUMNS],
-            rows: vec[ROWS]
+            rows: vec[ROWS],
         }
     }
 
@@ -72,25 +74,23 @@ impl IntoIterator for Header {
             current_x: self.xor - 1,
             current_y: self.yor,
             x_end: self.xor + self.columns,
-            y_end: self.yor + self.rows
+            y_end: self.yor + self.rows,
         }
     }
 }
 
-
 pub struct Build1997Header {
     user_id: String,
     saved_datetime: String,
-    process_flag: String
+    process_flag: String,
 }
 
 impl Build1997Header {
-
     pub fn new(user_id: String, saved_datetime: String, process_flag: String) -> Self {
         Build1997Header {
             user_id,
             saved_datetime,
-            process_flag
+            process_flag,
         }
     }
 }
@@ -98,31 +98,36 @@ impl Build1997Header {
 pub struct Build4_2Additions {
     valid_datetime: String,
     max_value: i32,
-    version_number: f32
+    version_number: f32,
 }
 
 impl Build4_2Additions {
-
     pub fn new(valid_datetime: String, max_value: i32, version_number: f32) -> Self {
         Build4_2Additions {
             valid_datetime,
             max_value,
-            version_number
+            version_number,
         }
     }
 }
 
 pub struct Build4_2Header {
     original: Build1997Header,
-    build_4_2_additions: Build4_2Additions 
+    build_4_2_additions: Build4_2Additions,
 }
 
 impl Build4_2Header {
-
-    pub fn new(user_id: String, saved_datetime: String, process_flag: String, valid_datetime: String, max_value: i32, version_number: f32) -> Self {
+    pub fn new(
+        user_id: String,
+        saved_datetime: String,
+        process_flag: String,
+        valid_datetime: String,
+        max_value: i32,
+        version_number: f32,
+    ) -> Self {
         Build4_2Header {
             original: Build1997Header::new(user_id, saved_datetime, process_flag),
-            build_4_2_additions: Build4_2Additions::new(valid_datetime, max_value, version_number)
+            build_4_2_additions: Build4_2Additions::new(valid_datetime, max_value, version_number),
         }
     }
 }
@@ -130,7 +135,7 @@ impl Build4_2Header {
 #[derive(Debug, Copy, Clone)]
 pub enum OperSys {
     HP,
-    LX
+    LX,
 }
 
 pub struct Build5_2_2Header {
@@ -138,34 +143,33 @@ pub struct Build5_2_2Header {
     user_id: String,
     saved_datetime: String,
     process_flag: String,
-    build_4_2_additions: Build4_2Additions
+    build_4_2_additions: Build4_2Additions,
 }
 
 impl Build5_2_2Header {
-
-    pub fn new(operating_system: OperSys, 
-               user_id: String, 
-               saved_datetime: String, 
-               process_flag: String, 
-               valid_datetime: String, 
-               max_value: i32, 
-               version_number: f32) -> Self {
-
+    pub fn new(
+        operating_system: OperSys,
+        user_id: String,
+        saved_datetime: String,
+        process_flag: String,
+        valid_datetime: String,
+        max_value: i32,
+        version_number: f32,
+    ) -> Self {
         Build5_2_2Header {
             operating_system,
             user_id,
             saved_datetime,
             process_flag,
-            build_4_2_additions: Build4_2Additions::new(valid_datetime, max_value, version_number)
+            build_4_2_additions: Build4_2Additions::new(valid_datetime, max_value, version_number),
         }
     }
 }
 
-
 pub enum Metadata {
     Header1997(Build1997Header),
     Header4_2(Build4_2Header),
-    Header5_2_2(Build5_2_2Header)
+    Header5_2_2(Build5_2_2Header),
 }
 
 impl Metadata {
@@ -174,7 +178,7 @@ impl Metadata {
         match self {
             Metadata::Header1997(header) => header.saved_datetime.clone(),
             Metadata::Header4_2(header) => header.original.saved_datetime.clone(),
-            Metadata::Header5_2_2(header) => header.saved_datetime.clone()
+            Metadata::Header5_2_2(header) => header.saved_datetime.clone(),
         }
     }
 
@@ -182,7 +186,7 @@ impl Metadata {
         match self {
             Metadata::Header1997(_) => None,
             Metadata::Header4_2(_) => None,
-            Metadata::Header5_2_2(header) => Some(header.operating_system)
+            Metadata::Header5_2_2(header) => Some(header.operating_system),
         }
     }
 
@@ -190,7 +194,7 @@ impl Metadata {
         match self {
             Metadata::Header1997(_) => None,
             Metadata::Header4_2(header) => Some(header.build_4_2_additions.max_value),
-            Metadata::Header5_2_2(header) => Some(header.build_4_2_additions.max_value)
+            Metadata::Header5_2_2(header) => Some(header.build_4_2_additions.max_value),
         }
     }
 
@@ -199,7 +203,7 @@ impl Metadata {
         match self {
             Metadata::Header1997(header) => Some(header.user_id.clone()),
             Metadata::Header4_2(header) => Some(header.original.user_id.clone()),
-            Metadata::Header5_2_2(header) => Some(header.user_id.clone())
+            Metadata::Header5_2_2(header) => Some(header.user_id.clone()),
         }
     }
 
@@ -207,7 +211,7 @@ impl Metadata {
         match self {
             Metadata::Header1997(header) => Some(header.process_flag.clone()),
             Metadata::Header4_2(header) => Some(header.original.process_flag.clone()),
-            Metadata::Header5_2_2(header) => Some(header.process_flag.clone())
+            Metadata::Header5_2_2(header) => Some(header.process_flag.clone()),
         }
     }
 
@@ -215,7 +219,7 @@ impl Metadata {
         match self {
             Metadata::Header1997(_) => None,
             Metadata::Header4_2(header) => Some(header.build_4_2_additions.version_number),
-            Metadata::Header5_2_2(header) => Some(header.build_4_2_additions.version_number)
+            Metadata::Header5_2_2(header) => Some(header.build_4_2_additions.version_number),
         }
     }
 
@@ -223,7 +227,9 @@ impl Metadata {
         match self {
             Metadata::Header1997(_) => None,
             Metadata::Header4_2(header) => Some(header.build_4_2_additions.valid_datetime.clone()),
-            Metadata::Header5_2_2(header) => Some(header.build_4_2_additions.valid_datetime.clone())
+            Metadata::Header5_2_2(header) => {
+                Some(header.build_4_2_additions.valid_datetime.clone())
+            }
         }
     }
 }
@@ -284,12 +290,9 @@ impl Metadata {
 //     None
 // }
 
-
-
 #[cfg(test)]
 mod tests {
     // use super::*;
-
 
     // #[test]
     // fn read_file_name_date_test() {
@@ -298,7 +301,7 @@ mod tests {
     //     let data_segments = read_xmrg_date(&path).unwrap();
 
     //     assert_eq!(data_segments.month, 5);
-    //     assert_eq!(data_segments.day, 6);       
+    //     assert_eq!(data_segments.day, 6);
     //     assert_eq!(data_segments.year, 1995);
     //     assert_eq!(data_segments.hour, 16);
 
@@ -306,5 +309,4 @@ mod tests {
 
     //     let ds2 = read_xmrg_date(&p2).unwrap();
     // }
-
 }
