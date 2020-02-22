@@ -1,9 +1,9 @@
 use crate::geo::Point;
 use crate::hrap::hrap_to_latlon;
-// use crate::read_bytes::ReadBytes;
-// use crate::endian::Endian;
-// use std::io::prelude::*;
-// use std::io;
+use crate::read_bytes::ReadBytes;
+use crate::endian::Endian;
+use std::io::prelude::*;
+use std::io;
 
 const XOR: usize = 0;
 const YOR: usize = 1;
@@ -134,12 +134,18 @@ impl Build4_2Header {
             build_4_2_additions: Build4_2Additions::new(valid_datetime, max_value, version_number),
         }
     }
+
+    // rename this
+    pub fn new_2(original: Build1997Header, build_4_2_additions: Build4_2Additions) -> Self {
+        Build4_2Header { original, build_4_2_additions }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum OperSys {
     HP,
     LX,
+    Unknown
 }
 
 pub struct Build5_2_2Header {
@@ -186,23 +192,58 @@ impl Build5_2_2Header {
         }
 }
 
-// pub fn build_42_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Option<Build4_2Additions>> {
+pub fn build_1997_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Build1997Header> {
+    let user_id_b = ReadBytes::new(10, endian).read_u8s(reader)?;
+    let saved_datetime_b = ReadBytes::new(20, endian).read_u8s(reader)?;
+    let process_flag_b = ReadBytes::new(8, endian).read_u8s(reader)?;
 
-//     let valid_datetime = ReadBytes::new(20, endian).read_u8s(reader)?;
-//     let max_value = endian;
-//     let version_number = read_1.read_u8s(reader: &mut R)
+    let user_id = String::from_utf8(user_id_b).unwrap_or(String::default());
+    let saved_datetime_b = String::from_utf8(saved_datetime_b).unwrap_or(String::default());
+    let process_flag = String::from_utf8(process_flag_b).unwrap_or(String::default());
 
-// }
+    Ok(Build1997Header::new(user_id, saved_datetime_b, process_flag))
+}
 
-// pub fn build_522_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Option<Build5_2_2Header>> {
-//     let op_bytes: Vec<u8> = (0..2).map(|_| endian.read_u8(reader)).collect()?;
-//     let user_id: Vec<u8> = (0..8).map(|_| endian.read_u8(reader)).collect()?;
-    // let saved_datetime = (0..20).map(|_| endian.read_u8(reader)).collect()?;
-    // let process_flag = (0..8).map(|_| endian.read_u8(reader)).collect()?;
-//     let build_4_2_additions = build_42_reader(&reader, endian)?;
+pub fn build_4_2_add_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Build4_2Additions> {
 
-//     Header5_2_2(Build5_2_2Header::new(op))
-// }
+    let valid_datetime_bytes = ReadBytes::new(20, endian).read_u8s(reader)?;
+    let max_value = endian.read_int32(reader)?;
+    let version_number = endian.read_f32(reader)?;
+
+    let valid_datetime = String::from_utf8(valid_datetime_bytes).unwrap_or(String::default());
+
+    Ok(Build4_2Additions::new(valid_datetime, max_value, version_number))
+}
+
+pub fn build_4_2_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Build4_2Header> {
+    let original = build_1997_reader(reader, endian)?;
+    let additions = build_4_2_add_reader(reader, endian)?;
+
+    Ok(Build4_2Header::new_2(original, additions))
+}
+
+pub fn build_5_2_2_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Build5_2_2Header> {
+    let read_8 = ReadBytes::new(8, endian);
+
+    let op_bytes = ReadBytes::new(2, endian).read_u8s(reader)?;
+    let user_id = read_8.read_u8s(reader)?;
+    let saved_datetime = ReadBytes::new(20, endian).read_u8s(reader)?;
+    let process_flag = read_8.read_u8s(reader)?;
+    let build_4_2_additions = build_4_2_add_reader(reader, endian)?;
+
+    let op = match String::from_utf8(op_bytes).unwrap_or(String::default()).as_ref() {
+        "LX" => OperSys::LX,
+        "HP" => OperSys::HP,
+        _ => OperSys::Unknown
+    };
+
+    let u_id = String::from_utf8(user_id).unwrap_or(String::default());
+    let s_dt = String::from_utf8(saved_datetime).unwrap_or(String::default());
+    let p_flag = String::from_utf8(process_flag).unwrap_or(String::default());
+
+
+    Ok(Build5_2_2Header::new_2(op, u_id, s_dt, p_flag, build_4_2_additions))
+}
 
 pub enum Metadata {
     Header1997(Build1997Header),
