@@ -1,9 +1,9 @@
 use crate::geo::Point;
 use crate::hrap::hrap_to_latlon;
 // use crate::read_bytes::ReadBytes;
-use crate::endian::Endian;
-use std::io::prelude::*;
-use std::io;
+// use crate::endian::Endian;
+// use std::io::prelude::*;
+// use std::io;
 
 const XOR: usize = 0;
 const YOR: usize = 1;
@@ -168,22 +168,41 @@ impl Build5_2_2Header {
             build_4_2_additions: Build4_2Additions::new(valid_datetime, max_value, version_number),
         }
     }
-}
 
-pub fn build_522_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Metadata> {
-    let op_bytes: Vec<u8> = (0..2).map(|_| endian.read_u8(reader)).collect()?;
-    let op = String::from_utf8(op_bytes).map(|s| {
-        match s.as_ref() {
-            "LX" => OperSys::LX,
-            "HP" => OperSys::HP,
-            _ => 
+    // change name
+    pub fn new_2(
+        operating_system: OperSys,
+        user_id: String,
+        saved_datetime: String,
+        process_flag: String,
+        build_4_2_additions: Build4_2Additions) -> Self {
+            Build5_2_2Header {
+                operating_system,
+                user_id,
+                saved_datetime,
+                process_flag,
+                build_4_2_additions
+            }
         }
-    });
-
-
-
-    Header5_2_2(Build5_2_2Header::new(op))
 }
+
+// pub fn build_42_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Option<Build4_2Additions>> {
+
+//     let valid_datetime = ReadBytes::new(20, endian).read_u8s(reader)?;
+//     let max_value = endian;
+//     let version_number = read_1.read_u8s(reader: &mut R)
+
+// }
+
+// pub fn build_522_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Option<Build5_2_2Header>> {
+//     let op_bytes: Vec<u8> = (0..2).map(|_| endian.read_u8(reader)).collect()?;
+//     let user_id: Vec<u8> = (0..8).map(|_| endian.read_u8(reader)).collect()?;
+    // let saved_datetime = (0..20).map(|_| endian.read_u8(reader)).collect()?;
+    // let process_flag = (0..8).map(|_| endian.read_u8(reader)).collect()?;
+//     let build_4_2_additions = build_42_reader(&reader, endian)?;
+
+//     Header5_2_2(Build5_2_2Header::new(op))
+// }
 
 pub enum Metadata {
     Header1997(Build1997Header),

@@ -38,6 +38,16 @@ impl Endian {
             Endian::Little => Ok(u8::from_le_bytes(buffer)),
         }
     }
+
+    pub fn read_f32<R: Read>(&self, reader: &mut R) -> io::Result<f32> {
+        let mut buffer = [0; 4];
+        reader.read_exact(&mut buffer)?; // need error handling in case not 4 bytes?
+
+        match self {
+            Endian::Big => Ok(f32::from_be_bytes(buffer)),
+            Endian::Little => Ok(f32::from_le_bytes(buffer)),
+        }
+    }
 }
 
 fn read_b_int32<R: Read>(reader: &mut R) -> io::Result<i32> {
