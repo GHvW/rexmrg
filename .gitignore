@@ -1,5 +1,7 @@
 /target
 **/*.rs.bk
 *.txt
+*.gz
 
+temp
 .ionide

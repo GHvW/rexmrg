@@ -1,5 +1,9 @@
 use crate::geo::Point;
 use crate::hrap::hrap_to_latlon;
+// use crate::read_bytes::ReadBytes;
+use crate::endian::Endian;
+use std::io::prelude::*;
+use std::io;
 
 const XOR: usize = 0;
 const YOR: usize = 1;
@@ -164,6 +168,21 @@ impl Build5_2_2Header {
             build_4_2_additions: Build4_2Additions::new(valid_datetime, max_value, version_number),
         }
     }
+}
+
+pub fn build_522_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Metadata> {
+    let op_bytes: Vec<u8> = (0..2).map(|_| endian.read_u8(reader)).collect()?;
+    let op = String::from_utf8(op_bytes).map(|s| {
+        match s.as_ref() {
+            "LX" => OperSys::LX,
+            "HP" => OperSys::HP,
+            _ => 
+        }
+    });
+
+
+
+    Header5_2_2(Build5_2_2Header::new(op))
 }
 
 pub enum Metadata {

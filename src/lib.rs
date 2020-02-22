@@ -75,12 +75,12 @@ pub fn read_xmrg(path: &str) -> io::Result<XmrgData> {
                     .map(|_| process_row(row_reader, &mut reader))
                     .collect()
             }
-            // XmrgVersion::Build4_2 => {
+            XmrgVersion::Build4_2 => {
 
-            // },
-            // XmrgVersion::Build5_2_2 => {
+            },
+            XmrgVersion::Build5_2_2 => {
 
-            // },
+            },
             _ => Ok(Vec::new()), // not implemented
         }
     })?;
