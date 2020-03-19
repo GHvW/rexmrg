@@ -66,26 +66,35 @@ pub fn read_xmrg(path: &str) -> io::Result<XmrgData> {
 
     let row_reader = ReadBytes::new(header[COLUMNS], endian);
 
-    let values = xmrg_version.map_or(Ok(Vec::new()), |version| {
+    reader.seek(SeekFrom::Start(24))?; // set reader to position just after header (4 bytes + 16 byte header + 4 bytes = 24)
+    let header2 = xmrg_version.and_then(|version| {
         match version {
             XmrgVersion::Pre1997 => {
-                reader.seek(SeekFrom::Start(24))?; // set reader to position just after header (4 bytes + 16 byte header + 4 bytes = 24)
 
-                (0..header[ROWS])
-                    .map(|_| process_row(row_reader, &mut reader))
-                    .collect()
+                // (0..header[ROWS])
+                //     .map(|_| process_row(row_reader, &mut reader))
+                //     .collect()
+
+                None
             }
-            // XmrgVersion::Build4_2 => {
-
-            // },
-            // XmrgVersion::Build5_2_2 => {
-
-            // },
-            _ => Ok(Vec::new()), // not implemented
+            XmrgVersion::Build4_2 => {
+                None
+            },
+            XmrgVersion::Build5_2_2 => {
+                None
+            },
+            // _ => None, // not implemented
         }
-    })?;
+    });
 
-    Ok(XmrgData::new(Header::from_vec(header), None, values))
+    reader.seek(SeekFrom::Current(4))?;
+    let values = 
+        (0..header[ROWS])
+            .map(|_| process_row(row_reader, &mut reader))
+            .collect::<io::Result<Vec<Vec<f64>>>>()?;
+
+
+    Ok(XmrgData::new(Header::from_vec(header), header2, values))
 }
 
 pub struct XmrgData {
