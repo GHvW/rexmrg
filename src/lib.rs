@@ -14,7 +14,7 @@ use std::io::SeekFrom;
 
 use endian::get_endian;
 use geo::Feature;
-use headers::{Header, Metadata, build_4_2_reader};
+use headers::{build_4_2_reader, Header, Metadata};
 use read_bytes::ReadBytes;
 use utils::to_mm;
 use xmrg_version::{get_xmrg_version, XmrgVersion};
@@ -42,10 +42,7 @@ fn get_reader(path: &str) -> io::Result<BufReader<File>> {
 fn process_row<R: Read + Seek>(read_bytes: ReadBytes, reader: &mut R) -> io::Result<Vec<f64>> {
     reader.seek(SeekFrom::Current(4))?;
 
-    let result = read_bytes
-        .iter_int16s(reader)
-        .map(|res| res.map(to_mm))
-        .collect();
+    let result = read_bytes.iter(reader).map(|res| res.map(to_mm)).collect();
 
     reader.seek(SeekFrom::Current(4))?;
 
@@ -60,7 +57,7 @@ pub fn read_xmrg(path: &str) -> io::Result<XmrgData> {
     let header = ReadBytes::new(4, endian).read_int32s(&mut reader)?;
     reader.seek(SeekFrom::Current(4))?;
 
-    let record_2_bytes = endian.read_int32(&mut reader)?;
+    let record_2_bytes = endian.read(&mut reader)?;
 
     let xmrg_version = get_xmrg_version(record_2_bytes, header[COLUMNS]);
 
@@ -71,13 +68,11 @@ pub fn read_xmrg(path: &str) -> io::Result<XmrgData> {
         Some(version) => {
             reader.seek(SeekFrom::Start(24))?; // set reader to position just after header (4 bytes + 16 byte header + 4 bytes = 24)
             match version {
-                XmrgVersion::Pre1997 => {
-                    Ok(None)
-                }
+                XmrgVersion::Pre1997 => Ok(None),
                 XmrgVersion::Build4_2 => {
                     let h2 = build_4_2_reader(&mut reader, endian)?;
                     Ok(Some(Metadata::Header4_2(h2)))
-                },
+                }
                 XmrgVersion::Build5_2_2 => {
                     reader.seek(SeekFrom::Current(42))?;
                     Ok(None)
@@ -87,11 +82,9 @@ pub fn read_xmrg(path: &str) -> io::Result<XmrgData> {
     };
 
     reader.seek(SeekFrom::Current(4))?; // seek past trailing i32
-    let values = 
-        (0..header[ROWS])
-            .map(|_| process_row(row_reader, &mut reader))
-            .collect::<io::Result<Vec<Vec<f64>>>>()?;
-
+    let values = (0..header[ROWS])
+        .map(|_| process_row(row_reader, &mut reader))
+        .collect::<io::Result<Vec<Vec<f64>>>>()?;
 
     Ok(XmrgData::new(Header::from_vec(header), header2?, values))
 }
