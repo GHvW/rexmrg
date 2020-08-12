@@ -3,6 +3,54 @@ use crate::endian::Endian;
 use std::io;
 use std::io::prelude::*;
 
+pub trait FromBytes: Sized {
+    fn from_bytes(endianness: Endian, reader: &mut impl Read) -> io::Result<Self>;
+}
+
+impl FromBytes for u8 {
+    fn from_bytes(endianness: Endian, reader: &mut impl Read) -> io::Result<Self> {
+        let mut buffer = [0; 1];
+        reader.read_exact(&mut buffer)?;
+        match endianness {
+            Endian::Big => Ok(u8::from_be_bytes(buffer)),
+            Endian::Little => Ok(u8::from_le_bytes(buffer)),
+        }
+    }
+}
+
+impl FromBytes for i16 {
+    fn from_bytes(endianness: Endian, reader: &mut impl Read) -> io::Result<Self> {
+        let mut buffer = [0; 2];
+        reader.read_exact(&mut buffer)?;
+        match endianness {
+            Endian::Big => Ok(i16::from_be_bytes(buffer)),
+            Endian::Little => Ok(i16::from_le_bytes(buffer)),
+        }
+    }
+}
+
+impl FromBytes for i32 {
+    fn from_bytes(endianness: Endian, reader: &mut impl Read) -> io::Result<Self> {
+        let mut buffer = [0; 4];
+        reader.read_exact(&mut buffer)?;
+        match endianness {
+            Endian::Big => Ok(i32::from_be_bytes(buffer)),
+            Endian::Little => Ok(i32::from_le_bytes(buffer)),
+        }
+    }
+}
+
+impl FromBytes for f32 {
+    fn from_bytes(endianness: Endian, reader: &mut impl Read) -> io::Result<Self> {
+        let mut buffer = [0; 4];
+        reader.read_exact(&mut buffer)?;
+        match endianness {
+            Endian::Big => Ok(f32::from_be_bytes(buffer)),
+            Endian::Little => Ok(f32::from_le_bytes(buffer)),
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct ReadBytes {
     count: i32,
@@ -16,38 +64,24 @@ impl ReadBytes {
         Self { count, endian }
     }
 
-    pub fn iter_int32s<'a, R: Read>(
+    pub fn iter<'a, T: FromBytes, R: Read>(
         self,
         reader: &'a mut R,
-    ) -> impl Iterator<Item = io::Result<i32>> + 'a {
-        (0..self.count).map(move |_| self.endian.read_int32(reader))
-    }
-
-    pub fn iter_int16s<'a, R: Read>(
-        self,
-        reader: &'a mut R,
-    ) -> impl Iterator<Item = io::Result<i16>> + 'a {
-        (0..self.count).map(move |_| self.endian.read_int16(reader))
-    }
-
-    pub fn iter_u8s<'a, R: Read>(
-        self,
-        reader: &'a mut R,
-    ) -> impl Iterator<Item = io::Result<u8>> + 'a {
-        (0..self.count).map(move |_| self.endian.read_u8(reader))
+    ) -> impl Iterator<Item = io::Result<T>> + 'a {
+        (0..self.count).map(move |_| T::from_bytes(self.endian, reader))
     }
 
     // The following are convenience methods so you don't need to write collect::<io::Result<Vec<TYPE>>>() when you just want the bytes in a Vec
 
     pub fn read_int32s<R: Read>(self, reader: &mut R) -> io::Result<Vec<i32>> {
-        self.iter_int32s(reader).collect()
+        self.iter(reader).collect()
     }
 
     pub fn read_int16s<R: Read>(self, reader: &mut R) -> io::Result<Vec<i16>> {
-        self.iter_int16s(reader).collect()
+        self.iter(reader).collect()
     }
 
     pub fn read_u8s<R: Read>(self, reader: &mut R) -> io::Result<Vec<u8>> {
-        self.iter_u8s(reader).collect()
+        self.iter(reader).collect()
     }
 }

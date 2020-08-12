@@ -1,9 +1,9 @@
+use crate::endian::Endian;
 use crate::geo::Point;
 use crate::hrap::hrap_to_latlon;
 use crate::read_bytes::ReadBytes;
-use crate::endian::Endian;
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
 
 const XOR: usize = 0;
 const YOR: usize = 1;
@@ -137,7 +137,10 @@ impl Build4_2Header {
 
     // rename this
     pub fn new_2(original: Build1997Header, build_4_2_additions: Build4_2Additions) -> Self {
-        Build4_2Header { original, build_4_2_additions }
+        Build4_2Header {
+            original,
+            build_4_2_additions,
+        }
     }
 }
 
@@ -145,7 +148,7 @@ impl Build4_2Header {
 pub enum OperSys {
     HP,
     LX,
-    Unknown
+    Unknown,
 }
 
 pub struct Build5_2_2Header {
@@ -181,15 +184,16 @@ impl Build5_2_2Header {
         user_id: String,
         saved_datetime: String,
         process_flag: String,
-        build_4_2_additions: Build4_2Additions) -> Self {
-            Build5_2_2Header {
-                operating_system,
-                user_id,
-                saved_datetime,
-                process_flag,
-                build_4_2_additions
-            }
+        build_4_2_additions: Build4_2Additions,
+    ) -> Self {
+        Build5_2_2Header {
+            operating_system,
+            user_id,
+            saved_datetime,
+            process_flag,
+            build_4_2_additions,
         }
+    }
 }
 
 pub fn build_1997_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Build1997Header> {
@@ -201,18 +205,28 @@ pub fn build_1997_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<
     let saved_datetime_b = String::from_utf8(saved_datetime_b).unwrap_or(String::default());
     let process_flag = String::from_utf8(process_flag_b).unwrap_or(String::default());
 
-    Ok(Build1997Header::new(user_id, saved_datetime_b, process_flag))
+    Ok(Build1997Header::new(
+        user_id,
+        saved_datetime_b,
+        process_flag,
+    ))
 }
 
-pub fn build_4_2_add_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Build4_2Additions> {
-
+pub fn build_4_2_add_reader<R: Read>(
+    reader: &mut R,
+    endian: Endian,
+) -> io::Result<Build4_2Additions> {
     let valid_datetime_bytes = ReadBytes::new(20, endian).read_u8s(reader)?;
-    let max_value = endian.read_int32(reader)?;
-    let version_number = endian.read_f32(reader)?;
+    let max_value = endian.read(reader)?;
+    let version_number = endian.read(reader)?;
 
     let valid_datetime = String::from_utf8(valid_datetime_bytes).unwrap_or(String::default());
 
-    Ok(Build4_2Additions::new(valid_datetime, max_value, version_number))
+    Ok(Build4_2Additions::new(
+        valid_datetime,
+        max_value,
+        version_number,
+    ))
 }
 
 pub fn build_4_2_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result<Build4_2Header> {
@@ -231,18 +245,26 @@ pub fn build_5_2_2_reader<R: Read>(reader: &mut R, endian: Endian) -> io::Result
     let process_flag = read_8.read_u8s(reader)?;
     let build_4_2_additions = build_4_2_add_reader(reader, endian)?;
 
-    let op = match String::from_utf8(op_bytes).unwrap_or(String::default()).as_ref() {
+    let op = match String::from_utf8(op_bytes)
+        .unwrap_or(String::default())
+        .as_ref()
+    {
         "LX" => OperSys::LX,
         "HP" => OperSys::HP,
-        _ => OperSys::Unknown
+        _ => OperSys::Unknown,
     };
 
     let u_id = String::from_utf8(user_id).unwrap_or(String::default());
     let s_dt = String::from_utf8(saved_datetime).unwrap_or(String::default());
     let p_flag = String::from_utf8(process_flag).unwrap_or(String::default());
 
-
-    Ok(Build5_2_2Header::new_2(op, u_id, s_dt, p_flag, build_4_2_additions))
+    Ok(Build5_2_2Header::new_2(
+        op,
+        u_id,
+        s_dt,
+        p_flag,
+        build_4_2_additions,
+    ))
 }
 
 pub enum Metadata {
